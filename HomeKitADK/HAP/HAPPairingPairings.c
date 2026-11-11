@@ -214,14 +214,12 @@ static HAPError HAPPairingPairingsAddPairingProcessM1(
             return err;
         }
 
-        // If the admin controller pairing is removed, all pairings on the accessory must be removed.
-        err = HAPAccessoryServerCleanupPairings(server_);
-        if (err) {
-            HAPAssert(err == kHAPError_Unknown);
-            HAPLog(&logObject, "Add Pairing M1: Failed to cleanup pairings.");
-            session->state.pairings.error = kHAPPairingError_Unknown;
-            return kHAPError_None;
-        }
+        // No purge here, unlike Remove Pairing. Apple Home hubs downgrade the pairing
+        // controller to a regular user (AddPairing with new permissions) right after Pair
+        // Setup, and only then add the home's admin controller. Purging when the update
+        // leaves no admin wiped every pairing in that window, so accessories dropped out
+        // of Home while Home kept a dead entry. A temporarily admin-less accessory is
+        // harmless: the hub adds the admin next, and only admins can change pairings.
     } else {
         // Look for free pairing slot.
         for (key = 0; key < server->maxPairings; key++) {
