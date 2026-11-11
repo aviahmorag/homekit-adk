@@ -172,9 +172,24 @@ static HAPError HAPPairingPairingsAddPairingProcessM1(
             HAPLog(&logObject,
                    "Add Pairing M1: Additional controller's long-term public key does not match "
                    "the stored public key for the additional controller's pairing identifier.");
+            HAPPairingEventNotify(
+                    server->platform.keyValueStore,
+                    session_,
+                    "add_key_mismatch",
+                    pairing.identifier.bytes,
+                    pairing.numIdentifierBytes,
+                    permissions);
             session->state.pairings.error = kHAPPairingError_Unknown;
             return kHAPError_None;
         }
+
+        HAPPairingEventNotify(
+                server->platform.keyValueStore,
+                session_,
+                (pairing.permissions == permissions) ? "add_same" : "add_update",
+                pairing.identifier.bytes,
+                pairing.numIdentifierBytes,
+                permissions);
 
         // Update the permissions of the controller.
         pairing.permissions = permissions;
@@ -236,9 +251,24 @@ static HAPError HAPPairingPairingsAddPairingProcessM1(
         }
         if (key == server->maxPairings) {
             HAPLog(&logObject, "Add Pairing M1: No space for additional pairings.");
+            HAPPairingEventNotify(
+                    server->platform.keyValueStore,
+                    session_,
+                    "add_full",
+                    tlvs->identifierTLV->value.bytes,
+                    tlvs->identifierTLV->value.numBytes,
+                    permissions);
             session->state.pairings.error = kHAPPairingError_MaxPeers;
             return kHAPError_None;
         }
+
+        HAPPairingEventNotify(
+                server->platform.keyValueStore,
+                session_,
+                "add_new",
+                tlvs->identifierTLV->value.bytes,
+                tlvs->identifierTLV->value.numBytes,
+                permissions);
 
         // Add pairing.
         HAPRawBufferZero(&pairing, sizeof pairing);
@@ -481,6 +511,13 @@ static HAPError HAPPairingPairingsRemovePairingGetM2(
     // If the pairing exists, remove RemovedControllerPairingIdentifier and its corresponding long-term public
     // key from persistent storage. If a pairing for RemovedControllerPairingIdentifier does not exist, the
     // accessory must return success.
+    HAPPairingEventNotify(
+            server->platform.keyValueStore,
+            session_,
+            found ? "remove" : "remove_absent",
+            pairing.identifier.bytes,
+            pairing.numIdentifierBytes,
+            found ? pairing.permissions : -1);
     if (found) {
         // Remove the pairing.
         err = HAPPlatformKeyValueStoreRemove(server->platform.keyValueStore, kHAPKeyValueStoreDomain_Pairings, key);

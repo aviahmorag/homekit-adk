@@ -300,6 +300,25 @@ HAPError HAPPairingFind(
         HAPPlatformKeyValueStoreKey* key,
         bool* found);
 
+/**
+ * Reports a pairing-store mutation BEFORE it is applied, so state can be captured while the requester's
+ * own pairing still exists. Forensics only: never alters protocol behavior.
+ *
+ * @param      keyValueStore        Key-value store holding the pairings.
+ * @param      session              Session that requested the change, or NULL for internal purges.
+ * @param      event                Short event name, e.g. "remove", "purge_no_admin".
+ * @param      id                   Subject controller pairing identifier, if any.
+ * @param      idLen                Length of id.
+ * @param      permissions          Subject permissions (new value for add/update), or -1.
+ */
+void HAPPairingEventNotify(
+        HAPPlatformKeyValueStoreRef keyValueStore,
+        const HAPSessionRef* _Nullable session,
+        const char* event,
+        const uint8_t* _Nullable id,
+        size_t idLen,
+        int permissions);
+
 #if __has_feature(nullability)
 #pragma clang assume_nonnull end
 #endif

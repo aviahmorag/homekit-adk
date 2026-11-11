@@ -353,6 +353,14 @@ void HAPPlatformTCPStreamUpdateInterests(
     }
 }
 
+// Peer of the stream read most recently; lets pairing forensics attribute a request to an IP.
+static const struct mg_connection* s_last_peer_nc;
+static char s_last_peer[48];
+
+const char* HAPPlatformTCPStreamLastPeer(void) {
+    return s_last_peer;
+}
+
 HAPError HAPPlatformTCPStreamRead(
         HAPPlatformTCPStreamManagerRef tcpStreamManager HAP_UNUSED,
         HAPPlatformTCPStreamRef tcpStream,
@@ -372,6 +380,10 @@ HAPError HAPPlatformTCPStreamRead(
     if (nc->recv_mbuf.len == 0) {
         *numBytes = 0;
         return kHAPError_Busy;
+    }
+    if (nc != s_last_peer_nc) {
+        s_last_peer_nc = nc;
+        mg_sock_addr_to_str(&nc->sa, s_last_peer, sizeof(s_last_peer), MG_SOCK_STRINGIFY_IP | MG_SOCK_STRINGIFY_PORT);
     }
     *numBytes = MIN(maxBytes, nc->recv_mbuf.len);
     memcpy(bytes, nc->recv_mbuf.buf, *numBytes);

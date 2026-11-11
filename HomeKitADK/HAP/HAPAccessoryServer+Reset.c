@@ -12,6 +12,8 @@ HAPError HAPRestoreFactorySettings(HAPPlatformKeyValueStoreRef keyValueStore) {
 
     HAPError err;
 
+    HAPPairingEventNotify(keyValueStore, NULL, "factory_reset", NULL, 0, -1);
+
     // Erase persistent store.
     static const HAPPlatformKeyValueStoreDomain domainsToPurge[] = {
         kHAPKeyValueStoreDomain_Configuration,
@@ -34,6 +36,8 @@ HAPError HAPRemoveAllPairings(HAPPlatformKeyValueStoreRef keyValueStore) {
     HAPPrecondition(keyValueStore);
 
     HAPError err;
+
+    HAPPairingEventNotify(keyValueStore, NULL, "remove_all", NULL, 0, -1);
 
     // Erase persistent store.
     static const HAPPlatformKeyValueStoreDomain domainsToPurge[] = { kHAPKeyValueStoreDomain_Pairings };

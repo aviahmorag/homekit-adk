@@ -439,6 +439,7 @@ void HAPAccessoryServerLoadLTSK(HAPPlatformKeyValueStoreRef keyValueStore, HAPAc
         HAPFatalError();
     }
     if (!found) {
+        HAPPairingEventNotify(keyValueStore, NULL, "purge_new_ltsk", NULL, 0, -1);
         // Reset pairings.
         err = HAPPlatformKeyValueStorePurgeDomain(keyValueStore, kHAPKeyValueStoreDomain_Pairings);
         if (err) {
@@ -1036,6 +1037,7 @@ HAPError HAPAccessoryServerCleanupPairings(HAPAccessoryServerRef* server_) {
         if (context.hasPairings) {
             // Remove all pairings.
             HAPLogInfo(&logObject, "No admin pairing found. Removing all pairings.");
+            HAPPairingEventNotify(server->platform.keyValueStore, NULL, "purge_no_admin", NULL, 0, -1);
             HAPAccessoryServerDelegateScheduleHandleUpdatedState(server_);
             err = HAPPlatformKeyValueStorePurgeDomain(server->platform.keyValueStore, kHAPKeyValueStoreDomain_Pairings);
             if (err) {
