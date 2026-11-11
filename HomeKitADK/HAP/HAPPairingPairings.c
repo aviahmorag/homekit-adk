@@ -1034,7 +1034,11 @@ HAPError HAPPairingPairingsHandleRead(
             HAPAssert(sizeof pairing.publicKey.value == 32);
             HAPRawBufferCopyBytes(pairing.publicKey.value, &pairingBytes[37], 32);
             pairing.permissions = pairingBytes[69];
-            if (!(pairing.permissions & 0x01)) {
+            // Add Pairing was already admin-checked and applied when M1 was written; if it
+            // downgraded the requester itself (as Home hubs do right after Pair Setup),
+            // re-checking here would answer a successful change with an error.
+            if (!(pairing.permissions & 0x01) &&
+                session->state.pairings.method != kHAPPairingMethod_AddPairing) {
                 HAPLog(&logObject, "Pairings M1: Rejected access from non-admin controller.");
                 session->state.pairings.error = kHAPPairingError_Authentication;
                 err = kHAPError_None;
