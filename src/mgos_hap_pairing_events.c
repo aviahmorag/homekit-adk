@@ -10,7 +10,6 @@
 
 #include "mgos_hap_pairing_events.h"
 
-#include <stdio.h>
 #include <string.h>
 
 #include "HAP+Internal.h"
@@ -93,7 +92,7 @@ void HAPPairingEventNotify(
     if (session != NULL) {
         ev.has_session = true;
         // The peer is the stream most recently read, which is the requester for a synchronously handled request.
-        snprintf(ev.peer, sizeof(ev.peer), "%s", HAPPlatformTCPStreamLastPeer());
+        strncpy(ev.peer, HAPPlatformTCPStreamLastPeer(), sizeof(ev.peer) - 1);
         if (session->hap.active && session->hap.pairingID >= 0) {
             ev.requester_key = session->hap.pairingID;
             uint8_t bytes[PAIRING_RECORD_SIZE];
@@ -114,6 +113,8 @@ void HAPPairingEventNotify(
         }
     }
 
+#if CS_PLATFORM != CS_P_ESP8266
+    // Gen1 has no room for this string; it relies on the app-persisted record alone.
     LOG(LL_WARN,
         ("HAP pairing event %s subj %s p %d req %s/%d p %d peer %s n %d/%d",
          ev.event,
@@ -125,5 +126,6 @@ void HAPPairingEventNotify(
          ev.peer,
          ev.num_pairings,
          ev.num_admins));
+#endif
     mgos_hap_pairing_event(&ev);
 }
