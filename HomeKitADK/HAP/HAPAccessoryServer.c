@@ -630,13 +630,10 @@ static void HAPAccessoryServerPrepareStart(
     HAPAccessoryServerLoadLTSK(server->platform.keyValueStore, &server->identity.ed_LTSK);
     HAP_ed25519_public_key(server->identity.ed_LTPK, server->identity.ed_LTSK.bytes);
 
-    // Cleanup pairings.
-    err = HAPAccessoryServerCleanupPairings(server_);
-    if (err) {
-        HAPAssert(err == kHAPError_Unknown);
-        HAPLogError(&logObject, "Cleanup pairings failed.");
-        HAPFatalError();
-    }
+    // No "no admin -> remove all pairings" cleanup at startup. Home hubs leave freshly added
+    // accessories with only a regular-user pairing until they add the home's admin, so this
+    // wiped such accessories on their next reboot (e.g. a power cut). Removing the last admin
+    // via Remove Pairing still removes everything, as the spec requires.
 
     if (server->transports.ble) {
         HAPNonnull(server->transports.ble)->start(server_);
